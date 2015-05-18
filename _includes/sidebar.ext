@@ -1,0 +1,28 @@
+<div class="col-sm-3 col-sm-offset-1 blog-sidebar">
+  <div class="sidebar-module sidebar-module-inset">
+    <h4>The PanDA Project</h4>
+    <p>
+The PanDA Project develops the PanDA distributed workload management system. Learn more about PanDA
+<a href="https://twiki.cern.ch/twiki/bin/view/PanDA/PanDA">here</a>. <br>
+Learn more about this website <a href="/about.html">here</a>.
+</p>
+  </div>
+  <div class="sidebar-module">
+    <h4>Recent posts</h4>
+    <ol class="list-unstyled">
+    {% for post in site.posts %}
+      <li><a href="#">{{ post.title }}</a></li>
+    {% endfor %}
+    </ol>
+  </div>
+  <div class="sidebar-module">
+    <h4>Links</h4>
+    <ol class="list-unstyled">
+      <li><a href="http://feeds.feedburner.com/PanDAWMSNewsletter">RSS feed</a></li>
+      <li><a href="http://github.com/PanDAWMS/PanDAWMS.github.io/tree/master/_posts">News post repository</a></li>
+      <li><a href="http://twiki.cern.ch/twiki/bin/view/PanDA/PanDA">PanDA twiki</a></li>
+      <li><a href="https://github.com/PanDAWMS">PanDA repository</a></li>
+      <li><a href="http://bigpanda.cern.ch">ATLAS PanDA monitor</a></li>
+    </ol>
+  </div>
+</div><!-- /.blog-sidebar -->

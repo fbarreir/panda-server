@@ -1,0 +1,8 @@
+name: PanDA News
+description: News from the PanDA Workload Management System Project
+url: http://news.pandawms.org
+excerpt_separator: <!--more-->
+highlighter: pygments
+gems:
+  - jekyll-mentions
+  - jekyll-sitemap
