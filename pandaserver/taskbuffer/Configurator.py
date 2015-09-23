@@ -14,7 +14,7 @@ class JobBroker ():
 
     def get_nuclei(self):
         """
-        First implementation: return the Tier1s.
+        First implementation: return the Tier1s...
         """
         #TODO: discuss with Tadashi what format he wants, if he wants sitenames, queues, SE...
         tier1s = []
