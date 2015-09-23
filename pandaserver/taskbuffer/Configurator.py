@@ -16,6 +16,7 @@ class JobBroker ():
         """
         First implementation: return the Tier1s
         """
+        #TODO: discuss with Tadashi what format he wants, if he wants sitenames, queues, SE...
         tier1s = []
         for cloud_name in site_mapper.getCloudList():
             # get cloud
@@ -24,7 +25,6 @@ class JobBroker ():
             t1_name = cloud_spec['source']
             
             tier1s.append(t1_name)
-        
         return tier1s
         
         
