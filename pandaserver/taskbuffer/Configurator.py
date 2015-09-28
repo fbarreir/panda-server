@@ -6,7 +6,7 @@ from taskbuffer.TaskBuffer import taskBuffer as task_buffer
 # logger
 logger = PandaLogger().getLogger(__name__.split('.')[-1])
 
-class JobBroker ():
+class Configurator():
     
     def __init__(self):
         task_buffer.init(panda_config.dbhost, panda_config.dbpasswd, panda_config.nDBConnection ,True)
@@ -26,7 +26,26 @@ class JobBroker ():
             
             tier1s.append(t1_name)
         return tier1s
-        
-        
+
+
     def get_satellites(self, site=None, task_id=None):
         return []
+
+
+    # update endpoint dict
+    def get_tier1s_agis(self):
+        # get json
+        try:
+            tmpLog.debug('start')
+            jsonStr = ''
+            res = urllib2.urlopen('http://atlas-agis-api.cern.ch/request/site/query/list_sites_names/?json&tier_level=1')
+            jsonStr = res.read()
+            tier1s = json.loads(jsonStr)
+            tmpLog.debug('got {0} endpoints '.format(len(self.endPointDict)))
+        except:
+            errtype,errvalue = sys.exc_info()[:2]
+            errStr = 'failed to update EP with {0} {1} jsonStr={2}'.format(errtype.__name__,
+                                                                           errvalue,
+                                                                           jsonStr)
+            tmpLog.error(errStr)
+        return
