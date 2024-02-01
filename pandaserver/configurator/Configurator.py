@@ -749,8 +749,6 @@ class NetworkConfigurator(threading.Thread):
         sites_list = self.taskBuffer.configurator_read_sites()
 
         for entry in self.CRIC_cm_dump:
-            self.log_stream.debug(f"Processing CRIC CM entry {entry}")
-
             try:
                 src = entry["src"]
                 dst = entry["dst"]
