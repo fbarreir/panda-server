@@ -20,10 +20,10 @@ DEFAULT = "default"
 
 
 class Configurator(threading.Thread):
-    def __init__(self, task_buffer, log_stream=None):
+    def __init__(self, taskBuffer, log_stream=None):
         threading.Thread.__init__(self)
 
-        self.task_buffer = task_buffer
+        self.taskBuffer = taskBuffer
 
         if log_stream:
             self.log_stream = log_stream
@@ -425,9 +425,9 @@ class Configurator(threading.Thread):
         # Check for site inconsistencies
         CRIC_sites = set([site_name for site_name, site_config in self.site_dump.items() if site_config["state"] == "ACTIVE"])
         self.log_stream.debug(f"Sites in CRIC {CRIC_sites}")
-        configurator_sites = self.task_buffer.configurator_read_sites()
+        configurator_sites = self.taskBuffer.configurator_read_sites()
         self.log_stream.debug(f"Sites in Configurator {configurator_sites}")
-        schedconfig_sites = self.task_buffer.configurator_read_cric_sites()
+        schedconfig_sites = self.taskBuffer.configurator_read_cric_sites()
         self.log_stream.debug(f"Sites in Schedconfig {schedconfig_sites}")
 
         all_sites = sorted(filter(None, CRIC_sites | configurator_sites | schedconfig_sites))
@@ -446,9 +446,9 @@ class Configurator(threading.Thread):
         # Check for panda-site inconsistencies
         CRIC_panda_sites = set([self.schedconfig_dump[long_panda_site_name]["panda_resource"] for long_panda_site_name in self.schedconfig_dump])
         self.log_stream.debug(f"PanDA sites in CRIC {CRIC_panda_sites}")
-        configurator_panda_sites = self.task_buffer.configurator_read_panda_sites()
+        configurator_panda_sites = self.taskBuffer.configurator_read_panda_sites()
         self.log_stream.debug(f"PanDA sites in Configurator {configurator_panda_sites}")
-        schedconfig_panda_sites = self.task_buffer.configurator_read_cric_panda_sites()
+        schedconfig_panda_sites = self.taskBuffer.configurator_read_cric_panda_sites()
         self.log_stream.debug(f"PanDA sites in Schedconfig {schedconfig_panda_sites}")
 
         all_panda_sites = sorted(CRIC_panda_sites | configurator_panda_sites | schedconfig_panda_sites)
@@ -467,7 +467,7 @@ class Configurator(threading.Thread):
         # Check for DDM endpoint inconsistencies
         CRIC_ddm_endpoints = set([ddm_endpoint_name for ddm_endpoint_name in self.endpoint_token_dict])
         self.log_stream.debug(f"DDM endpoints in CRIC {CRIC_ddm_endpoints}")
-        configurator_ddm_endpoints = self.task_buffer.configurator_read_ddm_endpoints()
+        configurator_ddm_endpoints = self.taskBuffer.configurator_read_ddm_endpoints()
         self.log_stream.debug(f"DDM endpoints in Configurator {configurator_ddm_endpoints}")
 
         all_ddm_endpoints = sorted(CRIC_ddm_endpoints | configurator_ddm_endpoints)
@@ -507,15 +507,15 @@ class Configurator(threading.Thread):
 
         # Clean up sites
         sites_to_delete = configurator_sites - CRIC_sites
-        self.task_buffer.configurator_delete_sites(sites_to_delete)
+        self.taskBuffer.configurator_delete_sites(sites_to_delete)
 
         # Clean up panda sites
         panda_sites_to_delete = configurator_panda_sites - CRIC_panda_sites
-        self.task_buffer.configurator_delete_panda_sites(panda_sites_to_delete)
+        self.taskBuffer.configurator_delete_panda_sites(panda_sites_to_delete)
 
         # Clean up DDM endpoints
         ddm_endpoints_to_delete = configurator_ddm_endpoints - CRIC_ddm_endpoints
-        self.task_buffer.configurator_delete_ddm_endpoints(ddm_endpoints_to_delete)
+        self.taskBuffer.configurator_delete_ddm_endpoints(ddm_endpoints_to_delete)
 
     def run(self):
         """
@@ -552,10 +552,10 @@ class Configurator(threading.Thread):
         ) = self.process_site_dumps()
 
         # Persist the information to the PanDA DB
-        self.task_buffer.configurator_write_sites(sites_list)
-        self.task_buffer.configurator_write_panda_sites(panda_sites_list)
-        self.task_buffer.configurator_write_ddm_endpoints(ddm_endpoints_list)
-        self.task_buffer.configurator_write_panda_ddm_relations(panda_ddm_relation_dict)
+        self.taskBuffer.configurator_write_sites(sites_list)
+        self.taskBuffer.configurator_write_panda_sites(panda_sites_list)
+        self.taskBuffer.configurator_write_ddm_endpoints(ddm_endpoints_list)
+        self.taskBuffer.configurator_write_panda_ddm_relations(panda_ddm_relation_dict)
 
         # Do a data quality check
         self.consistency_check()
@@ -564,11 +564,11 @@ class Configurator(threading.Thread):
 
 
 class NetworkConfigurator(threading.Thread):
-    def __init__(self, task_buffer, log_stream=None):
+    def __init__(self, taskBuffer, log_stream=None):
         threading.Thread.__init__(self)
 
         # task buffer for database interactions
-        self.task_buffer = task_buffer
+        self.taskBuffer = taskBuffer
 
         # logger
         if log_stream:
@@ -611,7 +611,7 @@ class NetworkConfigurator(threading.Thread):
         """
 
         data = []
-        sites_list = self.task_buffer.configurator_read_sites()
+        sites_list = self.taskBuffer.configurator_read_sites()
 
         # Ignore outdated values
         latest_validity = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=30)
@@ -746,7 +746,7 @@ class NetworkConfigurator(threading.Thread):
         and prepares it for insertion into the PanDA DB
         """
         data = []
-        sites_list = self.task_buffer.configurator_read_sites()
+        sites_list = self.taskBuffer.configurator_read_sites()
 
         for entry in self.CRIC_cm_dump:
             self.log_stream.debug(f"Processing CRIC CM entry {entry}")
@@ -798,9 +798,9 @@ class NetworkConfigurator(threading.Thread):
         data_combined = data_nws + data_CRIC_cm
         if data_combined:
             # Insert the new data
-            self.task_buffer.insertNetworkMatrixData(data_combined)
+            self.taskBuffer.insertNetworkMatrixData(data_combined)
             # Do some cleanup of old data
-            self.task_buffer.deleteOldNetworkData()
+            self.taskBuffer.deleteOldNetworkData()
             return True
         else:
             return False
@@ -811,13 +811,13 @@ class SchedconfigJsonDumper(threading.Thread):
     Downloads the CRIC schedconfig dump and stores it in the DB, one row per queue
     """
 
-    def __init__(self, task_buffer, log_stream=None):
+    def __init__(self, taskBuffer, log_stream=None):
         """
         Initialization and configuration
         """
         threading.Thread.__init__(self)
 
-        self.task_buffer = task_buffer
+        self.taskBuffer = taskBuffer
         if log_stream:
             self.log_stream = log_stream
         else:
@@ -840,7 +840,7 @@ class SchedconfigJsonDumper(threading.Thread):
             self.log_stream.error(f"SKIPPING RUN. Failed to download {self.CRIC_URL_SCHEDCONFIG}")
             return False
 
-        return self.task_buffer.upsertQueuesInJSONSchedconfig(self.schedconfig_dump)
+        return self.taskBuffer.upsertQueuesInJSONSchedconfig(self.schedconfig_dump)
 
 
 class SWTagsDumper(threading.Thread):
@@ -848,13 +848,13 @@ class SWTagsDumper(threading.Thread):
     Downloads the CRIC tags dump, flattens it out and stores it in the DB, one row per queue
     """
 
-    def __init__(self, task_buffer, log_stream=None):
+    def __init__(self, taskBuffer, log_stream=None):
         """
         Initialization and configuration
         """
         threading.Thread.__init__(self)
 
-        self.task_buffer = task_buffer
+        self.taskBuffer = taskBuffer
         if log_stream:
             self.log_stream = log_stream
         else:
@@ -877,4 +877,4 @@ class SWTagsDumper(threading.Thread):
             self.log_stream.error(f"SKIPPING RUN. Failed to download {self.CRIC_URL_TAGS}")
             return False
 
-        return self.task_buffer.loadSWTags(self.tags_dump)
+        return self.taskBuffer.loadSWTags(self.tags_dump)
