@@ -4,6 +4,7 @@ import time
 from urllib.parse import urlparse
 
 import requests
+
 from pandaserver.config import panda_config
 
 GB = 1024**3
@@ -11,6 +12,10 @@ PROD_INPUT = "Production Input"
 PROD_OUTPUT = "Production Output"
 EXPRESS = "Express"
 FILES = "files"
+BYTES = "bytes"
+DISTANCE = "distance"
+DST_RSE = "dst_rse"
+SRC_RSE = "src_rse"
 MBPS = "mbps"
 LATENCY = "latency"
 PACKETLOSS = "packetloss"

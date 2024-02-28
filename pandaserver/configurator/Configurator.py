@@ -588,21 +588,111 @@ class NetworkConfigurator(threading.Thread):
     def retrieve_data(self):
         self.log_stream.debug("Getting NWS dump...")
         nws_reply = self.rucio_client._send_request(build_url(self.rucio_client.list_hosts[0], path="requests/metrics", params={}))
-        self.nws_dump = nws_reply.text
-        self.log_stream.debug(self.nws_dump)
-        if not self.nws_dump:
-            self.log_stream.error("Could not retrieve the NWS data")
+        try:
+            self.nws_dump = nws_reply.text
+            if not self.nws_dump:
+                self.log_stream.error("Could not retrieve the NWS data")
+                return False
+        except Exception:
+            self.log_stream.error(f"Failed to retrieve NWS data with {traceback.print_exc()}")
             return False
-        self.log_stream.debug("Done")
 
-        self.log_stream.debug("Getting CRIC cost matrix dump...")
-        self.CRIC_cm_dump = aux.get_dump(self.CRIC_URL_CM)
-        if not self.CRIC_cm_dump:
-            self.log_stream.error("Could not retrieve the cost matrix data")
-            return False
+        self.process_nws_dump2()
         self.log_stream.debug("Done")
-
         return True
+
+    def parse_nws_entry(self, entry):
+        metrics = []
+
+        # Ignore entries with wrong signature
+        if DST_RSE not in entry or SRC_RSE not in entry or FILES not in entry or BYTES not in entry:
+            return metrics
+
+        try:
+            source = entry["src_rse"]
+            destination = entry["dst_rse"]
+
+            files_done = entry[FILES][DONE]
+            for activity in [PROD_INPUT, PROD_OUTPUT, EXPRESS]:
+                if activity not in files_done:
+                    continue
+                try:
+                    updated_at = datetime.strptime(files_done[activity][TIMESTAMP], "%Y-%m-%dT%H:%M:%S")
+                    if updated_at > latest_validity:
+                        done_1h = files_done[activity][H1]
+                        done_6h = files_done[activity][H6]
+                        metrics.extend(
+                            (
+                                (
+                                    source,
+                                    destination,
+                                    f"{activity}_done_1h",
+                                    done_1h,
+                                    updated_at,
+                                ),
+                                (
+                                    source,
+                                    destination,
+                                    f"{activity}_done_6h",
+                                    done_6h,
+                                    updated_at,
+                                ),
+                            )
+                        )
+                except (KeyError, ValueError):
+                    self.log_stream.debug(f"Entry {files_done} ({source}->{destination}) key {activity} does not follow standards")
+                    continue
+        except Exception:
+            self.log_stream.error(f"Exception in line: {entry}")
+
+        return metrics
+
+    def parse_cric_entry(self, entry):
+        metrics = []
+
+        # Ignore entries with wrong signature
+        if DST_RSE not in entry or SRC_RSE not in entry or DISTANCE not in entry:
+            return metrics
+
+        try:
+            source = entry["src_rse"]
+            destination = entry["dst_rse"]
+
+            distance = entry[DISTANCE]
+            metrics.extend(
+                (
+                    source,
+                    destination,
+                    distance,
+                ),
+            )
+        except Exception:
+            self.log_stream.error(f"Exception in line: {entry}")
+
+        return metrics
+
+    def process_nws_dump2(self):
+        """
+        :return:
+        """
+        metrics = []
+        sites_list = self.taskBuffer.configurator_read_sites()
+        # Ignore outdated values
+        latest_validity = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=30)
+        for line in self.nws_dump:
+            try:
+                metric = json.loads(line)
+
+                # Read out the metrics from NWS-style entries
+                metrics.extend(self.parse_nws_entry(metric))
+
+                # Read out the metrics from CRIC-distance entries
+                metrics.extend(self.parse_cric_entry(metric))
+
+            except Exception:
+                self.log_stream.warning(f"Exception in line: {line}")
+
+        return metrics
 
     def process_nws_dump(self):
         """
