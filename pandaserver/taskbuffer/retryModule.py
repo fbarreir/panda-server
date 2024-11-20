@@ -510,6 +510,6 @@ def processing_job_failure(task_buffer, job_id, errors, attempt_number):
     apply_retrial_rules(task_buffer, job, errors, attempt_number)
 
     # Applying error classification logic
-    error_class = apply_error_classification_logic(job)
+    error_class = apply_error_classification_logic(task_buffer, job)
     if error_class == SYSTEM_ERROR_CLASS:
         task_buffer.increase_max_attempt(job_id, job.jediTaskID, job.Files)
