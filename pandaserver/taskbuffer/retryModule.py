@@ -499,6 +499,7 @@ def apply_error_classification_logic(task_buffer, job):
 
     # Classify the error
     error_class = classify_error(task_buffer, job_errors)
+    _logger.debug(f"Job {job.PandaID} was classified as {error_class}")
     return error_class
 
 
@@ -512,4 +513,5 @@ def processing_job_failure(task_buffer, job_id, errors, attempt_number):
     # Applying error classification logic
     error_class = apply_error_classification_logic(task_buffer, job)
     if error_class == SYSTEM_ERROR_CLASS:
+        _logger.debug("Going to increase max attempt")
         task_buffer.increase_max_attempt(job_id, job.jediTaskID, job.Files)
