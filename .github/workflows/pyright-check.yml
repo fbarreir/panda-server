@@ -28,10 +28,4 @@ jobs:
         EOF
 
     - name: Run pyright on changed files
-      run: |
-        files=$(git diff --name-only origin/master...HEAD -- '*.py')
-        if [ -n "$files" ]; then
-          echo "$files" | xargs -n1 pyright
-        else
-          echo "No Python files changed."
-        fi
+      run: pyright
