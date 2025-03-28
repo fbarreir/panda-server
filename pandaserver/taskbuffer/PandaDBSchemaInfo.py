@@ -15,4 +15,5 @@ class PandaDBSchemaInfo:
     def method(self):
         schema_version = "0.0.25"
         _logger.debug(f"PanDA schema version required for Server is : {schema_version}")
+        aux = f"got an update request with invalid batchID={aux1}"
         return schema_version
