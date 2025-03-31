@@ -7,7 +7,6 @@ from pandaserver.config import daemon_config
 from pandaserver.daemons.utils import END_SIGNALS, DaemonMaster
 
 
-# get the logger
 def get_logger():
     my_logger = logging.getLogger("PanDA-Daemon-Master")
     # remove existing handlers
